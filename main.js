@@ -1,23 +1,24 @@
+/**Params*****
+* @param {string} searchTerm - Search term for JIRA Query.
+* @param {function(string)} callback - Called when the query results have been
+*   formatted for rendering.
+* @param {function(string)} errorCallback - Called when the query or call fails.
+*/
+
 function getJIRAFeed(callback, errorCallback){
     let user = document.getElementById("user").value;
     if(user == undefined) return;
 
     let url = `https://jira.secondlife.com/activity?maxResults=50&streams=user+IS+${user}&providers=issues`;
     makeRequest(url, "").then((response) => {
-      console.log(response, 'at getJira')
       // empty response type allows the request.responseXML property to be returned in the makeRequest call
+      // without this, more difficult to parse responses that return different formats: JSON vs XML.
       callback(url, response);
     }, errorCallback);
 }
-/**
- * @param {string} searchTerm - Search term for JIRA Query.
- * @param {function(string)} callback - Called when the query results have been
- *   formatted for rendering.
- * @param {function(string)} errorCallback - Called when the query or call fails.
- */
 async function getQueryResults(searchTerm, callback, errorCallback) {
     try {
-      let response = await makeRequest(searchTerm, "json");
+      let response = await makeRequest(searchTerm, "json"); //awaits a resolved promise from makeRequest
       callback(createHTMLElementResult(response));
     } catch (error) {
       errorCallback(error);
@@ -66,7 +67,6 @@ function loadOptions(){
 }
 
 function buildJQL(callback) {
-  console.log(callback)
   let callbackBase = "https://jira.secondlife.com/rest/api/2/search?jql=";
   let project = document.getElementById("project").value;
   let status = document.getElementById("statusSelect").value;
@@ -79,7 +79,7 @@ function buildJQL(callback) {
 function createHTMLElementResult(response){
   document.getElementById('query-result').hidden = false;
   let resultsArray = response.issues.map((issue) =>{
-    return `<h6>${issue.fields.summary}</h6><ul><li>Status: <strong>${issue.fields.status.name}</strong></li><li><a href=${issue.self}>${issue.self}</a></li></ul>`
+    return `<h6>${issue.fields.summary}</h6><ul><li>Status: <strong>${issue.fields.status.name}</strong></li><li>Key: <em>${issue.key}</em>, ID: <em>${issue.id}</em></li><li><a href=${issue.self}>${issue.self}</a></li></ul>`
   })
   return `<div id ='response-results'>
       <h4>Total Results: ${response.total}</h4>
