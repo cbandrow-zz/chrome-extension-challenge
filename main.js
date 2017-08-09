@@ -3,7 +3,8 @@ function getJIRAFeed(callback, errorCallback){
     if(user == undefined) return;
 
     let url = `https://jira.secondlife.com/activity?maxResults=50&streams=user+IS+${user}&providers=issues`;
-    make_request(url, "").then((response) => {
+    makeRequest(url, "").then((response) => {
+      console.log(response, 'at getJira')
       // empty response type allows the request.responseXML property to be returned in the makeRequest call
       callback(url, response);
     }, errorCallback);
@@ -16,25 +17,15 @@ function getJIRAFeed(callback, errorCallback){
  */
 async function getQueryResults(searchTerm, callback, errorCallback) {
     try {
-      let response = await make_request(searchTerm, "json");
+      let response = await makeRequest(searchTerm, "json");
       callback(createHTMLElementResult(response));
     } catch (error) {
       errorCallback(error);
     }
 }
 
-function make_request(url, responseType) {
-  // return fetch(url, {
-  //   method: 'GET',
-  //   mode: 'no-cors',
-  //   headers:{
-  //     'Content-Type': 'application/json',
-  //     // 'Access-Control-Allow-Origin':'*'
-  //   },
-  // })
-  // .then((resp) => resp.json())
-  // .then((data) => console.log(data))
-  // .catch(error => console.log(error))
+function makeRequest(url, responseType) {
+
   return new Promise((resolve, reject) => {
 
     let req = new XMLHttpRequest();
@@ -56,7 +47,7 @@ function make_request(url, responseType) {
     }
     req.onreadystatechange = () =>{
       if(req.readyState == 4 && req.status == 401) {
-          reject("You must be logged in to JIRA to see this project.");
+        reject("You must be logged in to JIRA to see this project.");
       }
     }
     // Make the request
@@ -75,6 +66,7 @@ function loadOptions(){
 }
 
 function buildJQL(callback) {
+  console.log(callback)
   let callbackBase = "https://jira.secondlife.com/rest/api/2/search?jql=";
   let project = document.getElementById("project").value;
   let status = document.getElementById("statusSelect").value;
@@ -106,7 +98,7 @@ function domify(str){
 
 async function checkProjectExists(){
     try {
-      return await make_request("https://jira.secondlife.com/rest/api/2/project/SUN", "json");
+      return await makeRequest("https://jira.secondlife.com/rest/api/2/project/SUN", "json");
     } catch (errorMessage) {
       document.getElementById('status').innerHTML = 'ERROR. ' + errorMessage;
       document.getElementById('status').hidden = false;
@@ -127,13 +119,13 @@ document.addEventListener('DOMContentLoaded', () =>{
           document.getElementById('status').innerHTML = 'Performing JIRA search for ' + url;
           document.getElementById('status').hidden = false;
           // perform the search
-          getQueryResults(url, (return_val) =>{
+          getQueryResults(url, (returnVal) =>{
             // render the results
             document.getElementById('status').innerHTML = 'Query term: ' + url + '\n';
             document.getElementById('status').hidden = false;
 
             let jsonResultDiv = document.getElementById('query-result');
-            jsonResultDiv.innerHTML = return_val;
+            jsonResultDiv.innerHTML = returnVal;
             jsonResultDiv.hidden = false;
 
           }, (errorMessage)=> {
